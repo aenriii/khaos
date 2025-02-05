@@ -1,0 +1,12 @@
+[package]
+name = "khaos"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
+twilight-cache-inmemory = "0.16.0"
+twilight-gateway = "0.16.0"
+twilight-http = "0.16.0"
+twilight-model = "0.16.0"
