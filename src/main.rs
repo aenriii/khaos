@@ -36,8 +36,10 @@ async fn main() -> anyhow::Result<()> {
         Arc::clone(&http),
         "Bot online!",
         Id::new(1336845273263243296),
+        None,
     )
-    .await;
+    .await
+    .unwrap();
 
     while let Some(msg) = shard.next_event(EventTypeFlags::all()).await {
         let Ok(event) = msg else {
@@ -58,10 +60,13 @@ async fn handle_event(event: Event, http: Arc<Client>) -> Result<(), Box<dyn Err
         Event::MessageCreate(msg) => {
             println!("MESSAGE: {}", msg.content);
             if msg.author.id != BOT_ID {
-                http.create_message(msg.channel_id)
-                    .reply(msg.id)
-                    .content(&msg.content)
-                    .await?;
+                send_message(http, &msg.content, msg.channel_id, Some(msg.id))
+                    .await
+                    .unwrap();
+                //http.create_message(msg.channel_id)
+                //.reply(msg.id)
+                //.content(&msg.content)
+                //.await?;
             }
         }
         _ => println!("DEBUG: {event:?}"),
@@ -74,8 +79,13 @@ async fn send_message(
     http: Arc<Client>,
     msg: &str,
     cid: Id<ChannelMarker>,
+    rid: Option<Id<MessageMarker>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    http.create_message(cid).content(&msg).await?;
+    if let Some(value) = rid {
+        http.create_message(cid).reply(value).content(&msg).await?;
+    } else {
+        http.create_message(cid).content(&msg).await?;
+    }
 
     Ok(())
 }
