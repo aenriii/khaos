@@ -2,6 +2,7 @@ use std::{error::Error, fs, sync::Arc};
 use twilight_cache_inmemory::DefaultInMemoryCache;
 use twilight_gateway::{Event, EventTypeFlags, Intents, Shard, ShardId, StreamExt};
 use twilight_http::Client;
+use twilight_model::channel::Message;
 use twilight_model::id::{
     marker::{ChannelMarker, GuildMarker, MessageMarker, RoleMarker, UserMarker},
     Id,
@@ -59,15 +60,7 @@ async fn handle_event(event: Event, http: Arc<Client>) -> Result<(), Box<dyn Err
     match event {
         Event::MessageCreate(msg) => {
             println!("MESSAGE: {}", msg.content);
-            if msg.author.id != BOT_ID {
-                send_message(http, &msg.content, msg.channel_id, Some(msg.id))
-                    .await
-                    .unwrap();
-                //http.create_message(msg.channel_id)
-                //.reply(msg.id)
-                //.content(&msg.content)
-                //.await?;
-            }
+            parse_command(&msg, http).await.unwrap();
         }
         _ => println!("DEBUG: {event:?}"),
     }
@@ -85,6 +78,27 @@ async fn send_message(
         http.create_message(cid).reply(value).content(&msg).await?;
     } else {
         http.create_message(cid).content(&msg).await?;
+    }
+
+    Ok(())
+}
+
+async fn parse_command(
+    msg: &Message,
+    http: Arc<Client>,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let msg_vec: Vec<&str> = msg.content.as_str().split_whitespace().collect();
+
+    match msg_vec[0] {
+        "!test" => {
+            send_message(http, "Reply", msg.channel_id, Some(msg.id)).await?;
+        }
+        "!say" => {
+            send_message(http, msg_vec[1], msg.channel_id, Some(msg.id)).await?;
+        }
+        _ => {
+            println!("DEBUG: No valid command entered");
+        }
     }
 
     Ok(())
