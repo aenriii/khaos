@@ -1,11 +1,11 @@
-use deadpool_redis::{Config, Connection, Runtime};
+use deadpool_redis::{redis, Config, Connection, Runtime};
 use std::{error::Error, fs, sync::Arc};
 use twilight_cache_inmemory::DefaultInMemoryCache;
 use twilight_gateway::{Event, EventTypeFlags, Intents, Shard, ShardId, StreamExt};
 use twilight_http::Client;
 use twilight_model::channel::Message;
 use twilight_model::id::{
-    marker::{ChannelMarker, MessageMarker},
+    marker::{ChannelMarker, MessageMarker, UserMarker},
     Id,
 };
 
@@ -13,7 +13,6 @@ mod config;
 
 use config::KhaosControl;
 
-// TODO: Accept nominations via a command
 // TODO: Create a poll every two weeks to determine the new leader of the server
 // TODO: Prevent the leader from fighting the bot
 
@@ -63,7 +62,12 @@ async fn main() -> anyhow::Result<()> {
 
         cache.update(&event);
 
-        tokio::spawn(handle_event(config.clone(), Arc::clone(&http), database, event));
+        tokio::spawn(handle_event(
+            config.clone(),
+            Arc::clone(&http),
+            database,
+            event,
+        ));
     }
 
     Ok(())
@@ -72,7 +76,7 @@ async fn main() -> anyhow::Result<()> {
 async fn parse_command(
     config: &KhaosControl,
     http: Arc<Client>,
-    _database: Connection,
+    database: Connection,
     msg: &Message,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     if msg.content.starts_with(config.prefix()) {
@@ -82,7 +86,15 @@ async fn parse_command(
 
         match args[0] {
             "nominate" => {
-                // ...
+                parse_nomination(
+                    http,
+                    database,
+                    msg.channel_id,
+                    msg.author.id,
+                    msg.id,
+                    args[1],
+                )
+                .await?;
             }
             "test" => {
                 send_message(http, "Reply", msg.channel_id, Some(msg.id)).await?;
@@ -92,6 +104,35 @@ async fn parse_command(
             }
             _ => {}
         }
+    }
+
+    Ok(())
+}
+
+async fn parse_nomination(
+    http: Arc<Client>,
+    mut database: Connection,
+    cid: Id<ChannelMarker>,
+    author: Id<UserMarker>,
+    mid: Id<MessageMarker>,
+    nominee: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let nid: Id<UserMarker> = nominee[2..nominee.len() - 1].parse()?;
+    if redis::cmd("SADD")
+        .arg(&[format!("nominee:{nid}"), author.to_string()])
+        .query_async(&mut database)
+        .await?
+    {
+        println!("LOG: {author} nominated {nid}");
+        send_message(
+            http,
+            &format!("You've successfully nominated {nominee}!"),
+            cid,
+            Some(mid),
+        )
+        .await?;
+    } else {
+        send_message(http, "You've already nominated this user!", cid, Some(mid)).await?;
     }
 
     Ok(())
