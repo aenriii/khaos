@@ -2,12 +2,16 @@ use deadpool_redis::{redis, Config, Connection, Runtime};
 use std::{error::Error, fs, sync::Arc};
 use twilight_cache_inmemory::DefaultInMemoryCache;
 use twilight_gateway::{Event, EventTypeFlags, Intents, Shard, ShardId, StreamExt};
-use twilight_http::Client;
-use twilight_model::channel::Message;
-use twilight_model::id::{
-    marker::{ChannelMarker, MessageMarker, UserMarker},
-    Id,
+use twilight_http::{request::channel::reaction::RequestReactionType, Client};
+use twilight_model::{
+    channel::Message,
+    id::{
+        marker::{ChannelMarker, MessageMarker, UserMarker},
+        Id,
+    },
 };
+
+const SUCCESS_REACTION: RequestReactionType = RequestReactionType::Unicode { name: "✅" };
 
 mod config;
 
@@ -23,10 +27,13 @@ async fn handle_event(
     event: Event,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
+        Event::GatewayHeartbeatAck => {}
+        Event::GatewayHello(_) => {}
+        Event::GuildCreate(_) => {}
         Event::MessageCreate(msg) => {
-            println!("MESSAGE: {}", msg.content);
-            parse_command(&config, http, database, &msg).await.unwrap();
+            parse_command(&config, http, database, &msg).await?;
         }
+        Event::Ready(_) => {}
         _ => println!("DEBUG: {event:?}"),
     }
 
@@ -87,6 +94,7 @@ async fn parse_command(
         match args[0] {
             "nominate" => {
                 parse_nomination(
+                    config,
                     http,
                     database,
                     msg.channel_id,
@@ -96,12 +104,6 @@ async fn parse_command(
                 )
                 .await?;
             }
-            "test" => {
-                send_message(http, "Reply", msg.channel_id, Some(msg.id)).await?;
-            }
-            "say" => {
-                send_message(http, args[1], msg.channel_id, Some(msg.id)).await?;
-            }
             _ => {}
         }
     }
@@ -110,6 +112,7 @@ async fn parse_command(
 }
 
 async fn parse_nomination(
+    config: &KhaosControl,
     http: Arc<Client>,
     mut database: Connection,
     cid: Id<ChannelMarker>,
@@ -117,22 +120,29 @@ async fn parse_nomination(
     mid: Id<MessageMarker>,
     nominee: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let nid: Id<UserMarker> = nominee[2..nominee.len() - 1].parse()?;
-    if redis::cmd("SADD")
-        .arg(&[format!("nominee:{nid}"), author.to_string()])
-        .query_async(&mut database)
+    let members = http
+        .guild_members(config.guild())
+        .limit(1000)
         .await?
-    {
-        println!("LOG: {author} nominated {nid}");
-        send_message(
-            http,
-            &format!("You've successfully nominated {nominee}!"),
-            cid,
-            Some(mid),
-        )
+        .models()
         .await?;
+    let nominee = if nominee.starts_with("<@") && nominee.ends_with(">") {
+        let id: Id<UserMarker> = nominee[2..nominee.len() - 1].parse()?;
+        members.iter().find(|&member| member.user.id == id)
     } else {
-        send_message(http, "You've already nominated this user!", cid, Some(mid)).await?;
+        members.iter().find(|&member| member.user.name == nominee)
+    };
+    if let Some(nominee) = nominee {
+        if redis::cmd("SADD")
+            .arg(&[format!("nominee:{}", nominee.user.id), author.to_string()])
+            .query_async(&mut database)
+            .await?
+        {
+            println!("{author} nominated {}", nominee.user.id);
+            http.create_reaction(cid, mid, &SUCCESS_REACTION).await?;
+        } else {
+            send_message(http, "You've already nominated this user!", cid, Some(mid)).await?;
+        }
     }
 
     Ok(())

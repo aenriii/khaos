@@ -1,13 +1,12 @@
 use serde::Deserialize;
 use twilight_model::id::{
-    marker::{GuildMarker, RoleMarker, UserMarker},
+    marker::{GuildMarker, RoleMarker},
     Id,
 };
 
 // I did a funny. ~ahill
 #[derive(Clone, Deserialize)]
 pub(crate) struct KhaosControl {
-    bot: Id<UserMarker>,
     guild: Id<GuildMarker>,
     prefix: String,
     redis: String,
@@ -16,10 +15,6 @@ pub(crate) struct KhaosControl {
 }
 
 impl KhaosControl {
-    pub fn bot(&self) -> Id<UserMarker> {
-        self.bot
-    }
-
     pub fn guild(&self) -> Id<GuildMarker> {
         self.guild
     }
@@ -40,4 +35,3 @@ impl KhaosControl {
         self.token.clone()
     }
 }
-
