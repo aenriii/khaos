@@ -7,7 +7,10 @@ use twilight_model::id::{
 // I did a funny. ~ahill
 #[derive(Clone, Deserialize)]
 pub(crate) struct KhaosControl {
+    duration: i64,
+    epoch: String,
     guild: Id<GuildMarker>,
+    interval: i64,
     prefix: String,
     redis: String,
     role: Id<RoleMarker>,
@@ -15,8 +18,20 @@ pub(crate) struct KhaosControl {
 }
 
 impl KhaosControl {
+    pub fn duration(&self) -> i64 {
+        self.duration
+    }
+
+    pub fn epoch(&self) -> String {
+        self.epoch.clone()
+    }
+
     pub fn guild(&self) -> Id<GuildMarker> {
         self.guild
+    }
+
+    pub fn interval(&self) -> i64 {
+        self.interval
     }
 
     pub fn prefix(&self) -> &String {

@@ -59,6 +59,14 @@ async fn main() -> anyhow::Result<()> {
 
     let pool = Config::from_url(config.redis()).create_pool(Some(Runtime::Tokio1))?;
 
+    let epoch = config.epoch();
+
+    let interval = config.interval();
+
+    let duration = config.duration();
+
+    tokio::spawn(timer(Arc::clone(&http), epoch, interval, duration));
+
     while let Some(msg) = shard.next_event(EventTypeFlags::all()).await {
         let Ok(event) = msg else {
             eprintln!("Failed to receive event: {msg:?}");
@@ -161,4 +169,27 @@ async fn send_message(
     }
 
     Ok(())
+}
+
+//Hey bread, make sure to give epoch a value compatible with SystemTime. It will probably need to
+//be converted. It's currently a string only cause I wasn't sure what type it needed to be.
+//~ZShamp
+async fn timer(
+    http: Arc<Client>,
+    epoch: String,
+    interval: i64,
+    duration: i64,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let mut tick: i64 = 0;
+
+    loop {
+        if tick == interval {
+            println!("DEBUG: nomination interval reached");
+        } else if tick >= interval + duration {
+            println!("DEBUG: Polling duration reached.");
+        }
+
+        tick += 1;
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+    }
 }
