@@ -1,5 +1,7 @@
 use deadpool_redis::{redis, Config, Connection, Runtime};
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{error::Error, fs, sync::Arc};
+use tokio::sync::broadcast;
 use twilight_cache_inmemory::DefaultInMemoryCache;
 use twilight_gateway::{Event, EventTypeFlags, Intents, Shard, ShardId, StreamExt};
 use twilight_http::{request::channel::reaction::RequestReactionType, Client};
@@ -59,13 +61,13 @@ async fn main() -> anyhow::Result<()> {
 
     let pool = Config::from_url(config.redis()).create_pool(Some(Runtime::Tokio1))?;
 
+    let mut is_electing = false;
+
     let epoch = config.epoch();
 
     let interval = config.interval();
 
     let duration = config.duration();
-
-    tokio::spawn(timer(Arc::clone(&http), epoch, interval, duration));
 
     while let Some(msg) = shard.next_event(EventTypeFlags::all()).await {
         let Ok(event) = msg else {
@@ -73,10 +75,33 @@ async fn main() -> anyhow::Result<()> {
             continue;
         };
 
+        let election_iter = get_election_count(
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            epoch,
+            interval,
+        );
+
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
         let database = pool.get().await?;
 
         cache.update(&event);
 
+        if !is_electing
+            && current_time >= get_election_time(election_iter.await, epoch, interval).await
+            && current_time <= duration
+        {
+            is_electing = true;
+        } else {
+            is_electing = false;
+        }
+        //We need some way for handle_event to know when to accept election votes.
         tokio::spawn(handle_event(
             config.clone(),
             Arc::clone(&http),
@@ -86,6 +111,14 @@ async fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+async fn get_election_count(time: u64, epoch: u64, interval: u64) -> u64 {
+    return (time - epoch) / interval;
+}
+
+async fn get_election_time(iter: u64, epoch: u64, interval: u64) -> u64 {
+    return epoch + (interval * iter);
 }
 
 async fn parse_command(
@@ -169,27 +202,4 @@ async fn send_message(
     }
 
     Ok(())
-}
-
-//Hey bread, make sure to give epoch a value compatible with SystemTime. It will probably need to
-//be converted. It's currently a string only cause I wasn't sure what type it needed to be.
-//~ZShamp
-async fn timer(
-    http: Arc<Client>,
-    epoch: String,
-    interval: i64,
-    duration: i64,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let mut tick: i64 = 0;
-
-    loop {
-        if tick == interval {
-            println!("DEBUG: nomination interval reached");
-        } else if tick >= interval + duration {
-            println!("DEBUG: Polling duration reached.");
-        }
-
-        tick += 1;
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-    }
 }
