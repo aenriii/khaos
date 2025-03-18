@@ -23,6 +23,7 @@ use config::KhaosControl;
 // TODO: Prevent the leader from fighting the bot
 
 async fn handle_event(
+    is_electing: bool,
     config: KhaosControl,
     http: Arc<Client>,
     database: Connection,
@@ -33,7 +34,7 @@ async fn handle_event(
         Event::GatewayHello(_) => {}
         Event::GuildCreate(_) => {}
         Event::MessageCreate(msg) => {
-            parse_command(&config, http, database, &msg).await?;
+            parse_command(is_electing, &config, http, database, &msg).await?;
         }
         Event::Ready(_) => {}
         _ => println!("DEBUG: {event:?}"),
@@ -97,12 +98,14 @@ async fn main() -> anyhow::Result<()> {
             && current_time >= get_election_time(election_iter.await, epoch, interval).await
             && current_time <= duration
         {
+            send_message(Arc::clone(&http), "The biweekly election is now underway!", /*put channel_id here*/, None);
             is_electing = true;
         } else {
             is_electing = false;
         }
         //We need some way for handle_event to know when to accept election votes.
         tokio::spawn(handle_event(
+            is_electing,
             config.clone(),
             Arc::clone(&http),
             database,
@@ -122,6 +125,7 @@ async fn get_election_time(iter: u64, epoch: u64, interval: u64) -> u64 {
 }
 
 async fn parse_command(
+    is_electing: bool,
     config: &KhaosControl,
     http: Arc<Client>,
     database: Connection,
@@ -144,6 +148,28 @@ async fn parse_command(
                     args[1],
                 )
                 .await?;
+            }
+            "vote" => {
+                if is_electing {
+                    parse_vote(
+                        config,
+                        http,
+                        database,
+                        msg.channel_id,
+                        msg.author.id,
+                        msg.id,
+                        args[1],
+                    )
+                    .await?;
+                } else {
+                    send_message(
+                        http,
+                        "There is no election occuring!",
+                        msg.channel_id,
+                        Some(msg.id),
+                    )
+                    .await?;
+                }
             }
             _ => {}
         }
@@ -183,6 +209,42 @@ async fn parse_nomination(
             http.create_reaction(cid, mid, &SUCCESS_REACTION).await?;
         } else {
             send_message(http, "You've already nominated this user!", cid, Some(mid)).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn parse_vote(
+    config: &KhaosControl,
+    http: Arc<Client>,
+    mut database: Connection,
+    cid: Id<ChannelMarker>,
+    author: Id<UserMarker>,
+    mid: Id<MessageMarker>,
+    nominee: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let members: String = redis::cmd("KEYS")
+        .arg("nominee:*")
+        .query_async(&mut database)
+        .await?;
+
+    let nominee = if nominee.starts_with("<@") && nominee.ends_with(">") {
+        let id: Id<UserMarker> = nominee[2..nominee.len() - 1].parse()?;
+        members.iter().find(|&member| member.user.id == id)
+    } else {
+        members.iter().find(|&member| member.user.name == nominee)
+    };
+    if let Some(nominee) = nominee {
+        if redis::cmd("SADD")
+            .arg(&[format!("nominee:{}", nominee.user.id), author.to_string()])
+            .query_async(&mut database)
+            .await?
+        {
+            println!("{author} voted for {}", nominee.user.id);
+            http.create_reaction(cid, mid, &SUCCESS_REACTION).await?;
+        } else {
+            send_message(http, "You've already voted for this user!", cid, Some(mid)).await?;
         }
     }
 
