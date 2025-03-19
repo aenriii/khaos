@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use twilight_model::id::{
     marker::{GuildMarker, RoleMarker},
     Id,
@@ -18,20 +19,20 @@ pub(crate) struct KhaosControl {
 }
 
 impl KhaosControl {
-    pub fn duration(&self) -> u64 {
-        self.duration
+    pub fn duration(&self) -> Duration {
+        Duration::from_secs(self.duration)
     }
 
-    pub fn epoch(&self) -> u64 {
-        self.epoch.clone()
+    pub fn epoch(&self) -> SystemTime {
+        UNIX_EPOCH.checked_add(Duration::from_secs(self.epoch)).unwrap()
     }
 
     pub fn guild(&self) -> Id<GuildMarker> {
         self.guild
     }
 
-    pub fn interval(&self) -> u64 {
-        self.interval
+    pub fn interval(&self) -> Duration {
+        Duration::from_secs(self.interval)
     }
 
     pub fn prefix(&self) -> &String {
