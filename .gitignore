@@ -1,2 +1,6 @@
 /target
 khaos.toml
+.env
+*.env
+!example.env
+dev-persist
