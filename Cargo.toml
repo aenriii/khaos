@@ -8,9 +8,18 @@ anyhow = "1.0.96"
 chrono = { version = "0.4.40", features = ["serde"] }
 diesel = { version = "2.2.10", features = ["postgres", "chrono", "r2d2"] }
 dotenvy = "0.15.7"
+env_logger = "0.11.8"
+flume = "0.11.1"
+futures = "0.3.31"
+log = "0.4.27"
 r2d2 = "0.8.10"
 serde = { version = "1.0.218", features = ["derive"] }
 serde_with = { version = "3.12.0", features = ["chrono"] }
-serenity = "0.12.4"
 tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
+toml = "0.8.22"
+twilight-cache-inmemory = "0.16.0"
+twilight-gateway = "0.16.0"
+twilight-http = "0.16.0"
+twilight-model = "0.16.0"
+twilight-standby = "0.16.0"
 uuid = { version = "1.16.0", features = ["v7", "serde"] }
