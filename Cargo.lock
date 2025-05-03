@@ -848,8 +848,10 @@ dependencies = [
  "futures",
  "log",
  "r2d2",
+ "regex",
  "serde",
  "serde_with",
+ "string-patterns",
  "tokio",
  "toml",
  "twilight-cache-inmemory",
@@ -1424,6 +1426,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 dependencies = [
  "lock_api",
+]
+
+[[package]]
+name = "string-patterns"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6ff3b2c79c78d41ac11b1d6e7dca72e554a299d4a089f8b6e5c9ff3eec17080"
+dependencies = [
+ "regex",
 ]
 
 [[package]]

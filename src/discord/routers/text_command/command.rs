@@ -26,12 +26,17 @@ where
 
 pub struct Command {
     pub name: String,
+    pub allow_in_dm: bool,
     handler: CommandHandler,
 }
 
 impl Command {
-    pub fn new(name: String, handler: CommandHandler) -> Self {
-        Self { name, handler }
+    pub fn new(name: String, allow_in_dm: bool, handler: CommandHandler) -> Self {
+        Self {
+            name,
+            allow_in_dm,
+            handler,
+        }
     }
     pub fn execute(&self, msg: Message, args: Vec<String>, di: DI) {
         let fut = self.handler.call(Arc::new((msg, args, di)));

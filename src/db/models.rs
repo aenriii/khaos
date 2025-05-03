@@ -10,9 +10,10 @@ use super::schema::*;
 pub struct Election {
     pub uuid: String,
     pub server_id: String,
+    pub poll_message_id: String,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
-    pub poll_message_id: String,
+
     pub status: String,
 }
 

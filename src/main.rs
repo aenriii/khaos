@@ -1,4 +1,9 @@
-#![feature(unboxed_closures, async_fn_traits, impl_trait_in_assoc_type)]
+#![feature(
+    unboxed_closures,
+    async_fn_traits,
+    impl_trait_in_assoc_type,
+    let_chains
+)]
 #![allow(unused)]
 pub(crate) mod config;
 pub(crate) mod db;
