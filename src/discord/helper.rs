@@ -1,7 +1,8 @@
 use regex::Regex;
 use string_patterns::PatternCapture;
+use twilight_http::request::channel::message::CreateMessage;
 use twilight_model::{
-    channel::Message,
+    channel::{message::MessageFlags, Message},
     guild::{Guild, Member},
     id::{
         marker::{GuildMarker, UserMarker},
@@ -51,6 +52,32 @@ impl DiscordHelper {
             .or(user.user.global_name)
             .unwrap_or(user.user.name);
     }
+    pub async fn guild_from_id(di: DI, id: Id<GuildMarker>) -> Option<Guild> {
+        let guild = di.discord_http.guild(id).await;
+        if let Ok(guild) = guild {
+            let model = guild.model().await;
+            if let Ok(model) = model {
+                log::trace!("found guild {}", model.id);
+                return Some(model);
+            }
+        }
+        None
+    }
+    pub async fn guild_member_from_ids(
+        di: DI,
+        guild_id: Id<GuildMarker>,
+        user_id: Id<UserMarker>,
+    ) -> Option<Member> {
+        let member = di.discord_http.guild_member(guild_id, user_id).await;
+        if let Ok(member) = member {
+            let model = member.model().await;
+            if let Ok(model) = model {
+                log::trace!("found member {}", model.user.id);
+                return Some(model);
+            }
+        }
+        None
+    }
 }
 
 pub struct ElectionHelper;
@@ -58,5 +85,74 @@ pub struct ElectionHelper;
 impl ElectionHelper {
     pub async fn dm_user_with_nomination(di: DI, guild: Guild, user: Member) {
         // i love discord components v2!!
+        log::trace!("dm_user_with_nomination");
+        let dm_channels = di
+            .discord_http
+            .create_private_channel(user.user.id)
+            .await
+            .unwrap()
+            .model()
+            .await
+            .unwrap();
+        log::trace!("Created DM channel with user {}", user.user.id);
+        let payload = format!(
+            r#"
+            {{
+                "flags": 32768,
+                "components": [
+                    {{
+                        "type": 17,
+                        "components": [
+                            {{
+                                "type": 10,
+                                "content": " # Hello, {}!"
+                            }},
+                            {{
+                                "type": 10,
+                                "content": "You've been nominated in {}!"
+                            }},
+                            {{
+                                "type": 14,
+                                "spacing": 2
+                            }},
+                            {{
+                                "type": 1,
+                                "components": [
+                                    {{
+                                        "type": 2,
+                                        "label": "Accept Nomination",
+                                        "style": 1,
+                                        "custom_id": "accept_nomination_uid{}_gid{}"
+                                    }},
+                                    {{
+                                        "type": 2,
+                                        "label": "Decline Nomination",
+                                        "style": 4,
+                                        "custom_id": "decline_nomination_uid{}_gid{}"
+                                    }}
+                                ]
+                            }}
+                        ]
+                    }}
+                ]
+            }}
+            "#,
+            DiscordHelper::guild_member_name(&user),
+            &guild.name,
+            &user.user.id,
+            &guild.id,
+            &user.user.id,
+            &guild.id
+        );
+        println!("{}", payload);
+        let message = di
+            .discord_http
+            .create_message(dm_channels.id)
+            .payload_json(&payload.into_bytes().into_boxed_slice())
+            .await;
+        match message {
+            Ok(message) => log::trace!("dm_user_with_nomination: success!"),
+            Err(err) => log::error!("dm_user_with_nomination: {}", err),
+        }
     }
 }
