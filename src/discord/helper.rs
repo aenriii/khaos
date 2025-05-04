@@ -3,12 +3,18 @@ use string_patterns::PatternCapture;
 use twilight_http::request::channel::message::CreateMessage;
 use twilight_model::{
     channel::{message::MessageFlags, Message},
+    gateway::payload::incoming::InteractionCreate,
     guild::{Guild, Member},
+    http::{
+        attachment::Attachment,
+        interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
+    },
     id::{
-        marker::{GuildMarker, UserMarker},
+        marker::{GuildMarker, InteractionMarker, UserMarker},
         Id,
     },
 };
+use twilight_util::builder::InteractionResponseDataBuilder;
 
 use crate::di::DI;
 
@@ -154,5 +160,38 @@ impl ElectionHelper {
             Ok(message) => log::trace!("dm_user_with_nomination: success!"),
             Err(err) => log::error!("dm_user_with_nomination: {}", err),
         }
+    }
+}
+
+pub struct InteractionHelper;
+
+impl InteractionHelper {
+    pub async fn set_callback_deferred(di: DI, id: Id<InteractionMarker>, token: String) {
+        let _ = di
+            .discord_http
+            .interaction(di.current_application_id.get().unwrap().clone())
+            .create_response(
+                id,
+                &token,
+                &InteractionResponse {
+                    kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                    data: None,
+                },
+            )
+            .await;
+    }
+    pub async fn update_response(
+        di: DI,
+        interaction: InteractionCreate,
+        content: String,
+        attachments: Vec<Attachment>,
+    ) {
+        let _ = di
+            .discord_http
+            .interaction(di.current_application_id.get().unwrap().clone())
+            .update_response(&interaction.token)
+            .content(Some(&content))
+            .attachments(&attachments)
+            .await;
     }
 }

@@ -17,7 +17,9 @@ pub struct Election {
     pub status: String,
 }
 
-#[derive(Queryable, Selectable, Insertable, Associations, Identifiable, Debug, Clone)]
+#[derive(
+    Queryable, Selectable, Insertable, Associations, Identifiable, Debug, Clone, AsChangeset,
+)]
 #[diesel(table_name = nominees)]
 #[diesel(belongs_to(Election, foreign_key = election_id))]
 #[diesel(primary_key(id))]

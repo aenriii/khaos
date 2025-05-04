@@ -1,12 +1,11 @@
 use std::{fmt, pin::Pin, sync::Arc};
 
-use crate::{di::DI, Error};
+use crate::{di::DI, discord::routers::ResultFuture, Error};
 use futures::future::Future;
 use twilight_model::channel::Message;
 
 // magic code adapted from https://github.com/rust-lang/discord-mods-bot/blob/master/src/commands.rs
 
-pub type ResultFuture<T, E> = Pin<Box<dyn Future<Output = Result<T, E>> + Send>>;
 pub type CommandHandler = &'static (dyn CommandFn<()> + Send + Sync);
 
 pub trait CommandFn<T>: 'static {

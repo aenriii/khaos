@@ -3,11 +3,12 @@ use std::sync::Arc;
 use tokio::sync::{OnceCell, RwLock};
 use twilight_cache_inmemory::DefaultInMemoryCache;
 use twilight_gateway::Shard;
+use twilight_model::id::{marker::ApplicationMarker, Id};
 
 use crate::{
     config::Config,
     db::DbPool,
-    discord::routers::{SlashCommandRouter, TextCommandRouter},
+    discord::routers::{InteractionRouter, SlashCommandRouter, TextCommandRouter},
 };
 
 /// Dependency Injection container for the bot.
@@ -18,8 +19,11 @@ pub struct DI {
     pub discord_gateway: Arc<RwLock<Shard>>,
     pub discord_http: Arc<twilight_http::Client>,
     pub text_command_router: Arc<OnceCell<RwLock<TextCommandRouter>>>,
+    pub interaction_router: Arc<OnceCell<RwLock<InteractionRouter>>>,
     pub config: Arc<Config>,
     pub cache: Arc<DefaultInMemoryCache>,
+
+    pub current_application_id: Arc<OnceCell<Id<ApplicationMarker>>>,
 }
 unsafe impl Send for DI {}
 unsafe impl Sync for DI {}

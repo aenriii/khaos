@@ -63,8 +63,11 @@ async fn main() {
         discord_gateway: shard.clone(),
         discord_http: http.clone(),
         text_command_router: Arc::new(OnceCell::new()),
+        interaction_router: Arc::new(OnceCell::new()),
         config: Arc::new(config),
         cache: cache.clone(),
+
+        current_application_id: Arc::new(OnceCell::new()),
     };
     discord::run(shard, http, di).await;
 }

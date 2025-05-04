@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod events;
 mod helper;
+mod interactions;
 pub mod routers;
 
 use crate::di::DI;
@@ -12,6 +13,7 @@ use twilight_http::Client as HttpClient;
 pub async fn run(shard: Arc<RwLock<Shard>>, _http: Arc<HttpClient>, di: DI) {
     routers::initialize_routers(di.clone());
     commands::register_commands(di.clone()).await;
+    interactions::register_interactions(di.clone()).await;
     loop {
         if let Some(event) = { shard.write().await.next_event(EventTypeFlags::all()).await } {
             match event {

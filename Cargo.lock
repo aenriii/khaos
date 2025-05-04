@@ -859,6 +859,7 @@ dependencies = [
  "twilight-http",
  "twilight-model",
  "twilight-standby",
+ "twilight-util",
  "uuid",
 ]
 
@@ -1769,6 +1770,16 @@ dependencies = [
  "tokio",
  "tracing",
  "twilight-model",
+]
+
+[[package]]
+name = "twilight-util"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5777d71286611c1639021f5f6e6b40300eb8da278449ac1cf6da01c94053425"
+dependencies = [
+ "twilight-model",
+ "twilight-validate",
 ]
 
 [[package]]

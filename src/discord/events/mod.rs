@@ -11,6 +11,7 @@ pub async fn handle_event(event: Event, di: DI) -> () {
                 it.shard.map(|sh| sh.number()).unwrap_or(0),
                 it.user.name
             );
+            di.current_application_id.set(it.application.id).unwrap();
         }
         MessageCreate(it) => {
             log::trace!("[message_create] Received message {}!", it.id);
@@ -20,6 +21,16 @@ pub async fn handle_event(event: Event, di: DI) -> () {
                 log::warn!("[message_create] No command parser found!");
             }
         }
-        _ => {}
+        InteractionCreate(it) => {
+            log::trace!("[interaction_create] Recieved interaction {}!", &it.id);
+            if let Some(router) = di.interaction_router.get() {
+                router.read().await.route(*it).await
+            } else {
+                log::warn!("[interaction_create] No interaction router found!");
+            }
+        }
+        _ => {
+            // log::trace!("Unhandled event: {:?}", event);
+        }
     }
 }
