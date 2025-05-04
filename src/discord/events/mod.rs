@@ -1,6 +1,7 @@
 use twilight_gateway::Event;
+use twilight_model::id::Id;
 
-use crate::di::DI;
+use crate::{di::DI, discord::commands};
 
 pub async fn handle_event(event: Event, di: DI) -> () {
     use Event::*;
@@ -12,6 +13,14 @@ pub async fn handle_event(event: Event, di: DI) -> () {
                 it.user.name
             );
             di.current_application_id.set(it.application.id).unwrap();
+
+            // set commands
+            let commands_list = commands::slash_commands_list();
+            let interaction_client = di.discord_http.interaction(it.application.id.clone());
+            interaction_client
+                .set_guild_commands(Id::new(1366235691545006100), &commands_list)
+                .await;
+            log::info!("Commands set successfully!");
         }
         MessageCreate(it) => {
             log::trace!("[message_create] Received message {}!", it.id);

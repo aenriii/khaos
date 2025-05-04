@@ -17,8 +17,8 @@ use crate::di::DI;
 pub fn initialize_routers(di: DI) {
     di.text_command_router
         .set(RwLock::new(TextCommandRouter::new()));
-    // di.slash_command_router
-    //     .set(RwLock::new(SlashCommandRouter::new()));
+    di.slash_command_router
+        .set(RwLock::new(SlashCommandRouter::new(di.clone())));
     di.interaction_router
         .set(RwLock::new(InteractionRouter::new(di.clone())));
     log::info!("Registered Routers");

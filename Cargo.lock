@@ -113,6 +113,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b964d184e89d9b6b67dd2715bc8e74cf3107fb2b529990c90cf517326150bf4"
 
 [[package]]
+name = "async-trait"
+version = "0.1.88"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e539d3fca749fcee5236ab05e93a52867dd549cc157c8cb7f99595f3cedffdb5"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -840,6 +851,7 @@ name = "khaos"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "diesel",
  "dotenvy",
@@ -857,6 +869,7 @@ dependencies = [
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
+ "twilight-interactions",
  "twilight-model",
  "twilight-standby",
  "twilight-util",
@@ -1744,6 +1757,27 @@ checksum = "a36945d949920d6bb6aef30547e06ea645eefaa5575a14f56da608bf09d07ec8"
 dependencies = [
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "twilight-interactions"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f04837fa6d36de8c1446dd314095bcdc59a7c8021bf0dbf1dd0a846f1c146244"
+dependencies = [
+ "twilight-interactions-derive",
+ "twilight-model",
+]
+
+[[package]]
+name = "twilight-interactions-derive"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d42db71d6bffdca42068bbbe12d1201065ca9d3fb718ec7f28dc4c680977da2"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

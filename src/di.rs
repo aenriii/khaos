@@ -20,6 +20,7 @@ pub struct DI {
     pub discord_http: Arc<twilight_http::Client>,
     pub text_command_router: Arc<OnceCell<RwLock<TextCommandRouter>>>,
     pub interaction_router: Arc<OnceCell<RwLock<InteractionRouter>>>,
+    pub slash_command_router: Arc<OnceCell<RwLock<SlashCommandRouter>>>,
     pub config: Arc<Config>,
     pub cache: Arc<DefaultInMemoryCache>,
 

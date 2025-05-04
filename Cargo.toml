@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.96"
+async-trait = "0.1.88"
 chrono = { version = "0.4.40", features = ["serde"] }
 diesel = { version = "2.2.10", features = ["postgres", "chrono", "r2d2"] }
 dotenvy = "0.15.7"
@@ -22,6 +23,7 @@ toml = "0.8.22"
 twilight-cache-inmemory = "0.16.0"
 twilight-gateway = "0.16.0"
 twilight-http = "0.16.0"
+twilight-interactions = "0.16.2"
 twilight-model = "0.16.0"
 twilight-standby = "0.16.0"
 twilight-util = { version = "0.16.0", features = ["builder", "full"] }

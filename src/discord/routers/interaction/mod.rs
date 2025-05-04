@@ -40,7 +40,7 @@ impl InteractionRouter {
                         log::error!("Failed to handle interaction: {}", err);
                         let _ = InteractionHelper::update_response(
                             self.di.clone(),
-                            interaction.clone(),
+                            interaction.clone().0,
                             String::from("Oops! We had an error handling that request for some reason, give the following file to a bot developer!"),
                             vec![
                                 Attachment::from_bytes(String::from("failed_interaction.rs-log"), format!(r#"Failed to handle interaction with data:
@@ -57,7 +57,7 @@ Error: {}
         // if no handler was found, something went wrong
         let _ = InteractionHelper::update_response(
             self.di.clone(),
-            interaction.clone(),
+            interaction.clone().0,
             String::from("Oops! We couldn't handle that request for some reason, give the following file to a bot developer!"),
             vec![
                 Attachment::from_bytes(String::from("failed_interaction.rs-log"), format!(r#"Failed to handle interaction with data:

@@ -2,7 +2,8 @@
     unboxed_closures,
     async_fn_traits,
     impl_trait_in_assoc_type,
-    let_chains
+    let_chains,
+    async_trait_bounds
 )]
 #![allow(unused)]
 pub(crate) mod config;
@@ -64,6 +65,7 @@ async fn main() {
         discord_http: http.clone(),
         text_command_router: Arc::new(OnceCell::new()),
         interaction_router: Arc::new(OnceCell::new()),
+        slash_command_router: Arc::new(OnceCell::new()),
         config: Arc::new(config),
         cache: cache.clone(),
 

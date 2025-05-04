@@ -1,7 +1,10 @@
+use std::error;
+
 use regex::Regex;
 use string_patterns::PatternCapture;
 use twilight_http::request::channel::message::CreateMessage;
 use twilight_model::{
+    application::interaction::Interaction,
     channel::{message::MessageFlags, Message},
     gateway::payload::incoming::InteractionCreate,
     guild::{Guild, Member},
@@ -182,7 +185,7 @@ impl InteractionHelper {
     }
     pub async fn update_response(
         di: DI,
-        interaction: InteractionCreate,
+        interaction: Interaction,
         content: String,
         attachments: Vec<Attachment>,
     ) {
@@ -193,5 +196,26 @@ impl InteractionHelper {
             .content(Some(&content))
             .attachments(&attachments)
             .await;
+    }
+    pub async fn contentful_reply(di: DI, interaction: Interaction, content: String) {
+        let it = di
+            .discord_http
+            .interaction(di.current_application_id.get().unwrap().clone())
+            .create_response(
+                interaction.id,
+                &interaction.token,
+                &InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(InteractionResponseData {
+                        content: Some(content),
+                        ..Default::default()
+                    }),
+                },
+            )
+            .await;
+        match it {
+            Ok(_) => (),
+            Err(e) => log::error!("Failed to send contentful reply: {}", e),
+        };
     }
 }

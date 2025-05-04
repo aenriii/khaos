@@ -67,7 +67,7 @@ pub async fn handle(args: Arc<(DI, InteractionCreate)>) -> Result<(), Error> {
                     Err(err) => {
                         InteractionHelper::update_response(
                             di.clone(),
-                            interaction.clone(),
+                            interaction.clone().0,
                             format!(
                                 "Failed to {} the nomination, as there is no scheduled election!",
                                 action
@@ -99,7 +99,7 @@ pub async fn handle(args: Arc<(DI, InteractionCreate)>) -> Result<(), Error> {
                             .execute(&mut db);
                         InteractionHelper::update_response(
                             di.clone(),
-                            interaction.clone(),
+                            interaction.clone().0,
                             String::from("Nomination accepted"),
                             vec![],
                         )
@@ -108,7 +108,7 @@ pub async fn handle(args: Arc<(DI, InteractionCreate)>) -> Result<(), Error> {
                     Err(err) => {
                         InteractionHelper::update_response(
                             di.clone(),
-                            interaction.clone(),
+                            interaction.clone().0,
                             String::from("Nomination not found"),
                             vec![],
                         )
@@ -124,7 +124,7 @@ pub async fn handle(args: Arc<(DI, InteractionCreate)>) -> Result<(), Error> {
                             .execute(&mut db);
                         InteractionHelper::update_response(
                             di.clone(),
-                            interaction.clone(),
+                            interaction.clone().0,
                             String::from("Nomination declined"),
                             vec![],
                         )
@@ -133,7 +133,7 @@ pub async fn handle(args: Arc<(DI, InteractionCreate)>) -> Result<(), Error> {
                     Err(err) => {
                         InteractionHelper::update_response(
                             di.clone(),
-                            interaction.clone(),
+                            interaction.clone().0,
                             String::from("Failed to decline the nomination"),
                             vec![],
                         )
