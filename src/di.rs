@@ -15,7 +15,7 @@ use crate::{
 /// All references are Arc or otherwise impl Clone
 #[derive(Debug, Clone)]
 pub struct DI {
-    pub db: Arc<DbPool>,
+    pub db_pool: Arc<DbPool>,
     pub discord_gateway: Arc<RwLock<Shard>>,
     pub discord_http: Arc<twilight_http::Client>,
     pub text_command_router: Arc<OnceCell<RwLock<TextCommandRouter>>>,

@@ -96,7 +96,7 @@ async fn handle_nominate_command<Func>(
 ) where
     Func: async Fn(String) -> Result<(), crate::Error>,
 {
-    let mut conn = di.db.get().unwrap();
+    let mut conn = di.db_pool.get().unwrap();
     let mut user = di
         .discord_http
         .guild_member(guild_id, the_user_id)

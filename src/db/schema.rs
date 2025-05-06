@@ -27,14 +27,14 @@ diesel::table! {
         id -> Text,
         announcements_channel_id -> Nullable<Text>,
         poll_channel_id -> Nullable<Text>,
+        election_frequency -> Int4,
+        active -> Bool,
+        winner_temp_role_id -> Nullable<Text>,
+        winner_perm_role_id -> Nullable<Text>,
     }
 }
 
 diesel::joinable!(elections -> servers (server_id));
 diesel::joinable!(nominees -> elections (election_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    elections,
-    nominees,
-    servers,
-);
+diesel::allow_tables_to_appear_in_same_query!(elections, nominees, servers,);

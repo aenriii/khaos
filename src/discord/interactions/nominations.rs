@@ -43,7 +43,7 @@ pub async fn handle(args: Arc<(DI, InteractionCreate)>) -> Result<(), Error> {
             let uid = captures.get(2).unwrap().as_str().parse::<u64>().unwrap();
             let gid = captures.get(3).unwrap().as_str().parse::<u64>().unwrap();
 
-            let mut db = match di.db.get() {
+            let mut db = match di.db_pool.get() {
                 Ok(db) => db,
                 Err(err) => {
                     log::error!("Failed to get database connection: {}", err);

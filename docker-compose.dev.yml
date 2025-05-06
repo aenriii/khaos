@@ -7,7 +7,7 @@ services:
     ports:
       - 8080:8080
     env_file:
-      - dev.env
+      - .env
     depends_on:
       - postgres
 
@@ -17,7 +17,7 @@ services:
     networks:
       - khaos
     env_file:
-      - dev.env
+      - .env
     volumes:
       - ./dev-persist/pg:/var/lib/postgresql/data
     ports:

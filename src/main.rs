@@ -18,16 +18,7 @@ use twilight_gateway::{Intents, Shard, ShardId};
 use twilight_http::Client as HttpClient;
 #[tokio::main]
 async fn main() {
-    #[cfg(debug_assertions)]
-    {
-        println!("Loading dev.env!");
-        dotenv().ok();
-        from_path("dev.env").ok();
-    }
-    #[cfg(not(debug_assertions))]
-    {
-        dotenv().ok();
-    }
+    dotenv().ok();
 
     // logger
     env_logger::init();
@@ -45,7 +36,7 @@ async fn main() {
             | Intents::GUILD_MESSAGE_POLLS,
     )));
     let http = Arc::new(HttpClient::new(discord_token));
-
+    log::info!("Initialized shard");
     // db and config
     let connection = match db::establish_pool() {
         Ok(pool) => Arc::new(pool),
@@ -60,7 +51,7 @@ async fn main() {
     let cache = Arc::new(DefaultInMemoryCache::builder().build());
 
     let di = di::DI {
-        db: connection.clone(),
+        db_pool: connection.clone(),
         discord_gateway: shard.clone(),
         discord_http: http.clone(),
         text_command_router: Arc::new(OnceCell::new()),

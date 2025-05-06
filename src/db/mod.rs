@@ -9,6 +9,7 @@ pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
 pub fn establish_pool() -> Result<DbPool, r2Error> {
     let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    log::trace!("Connecting to database...");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder().build(manager)
 }

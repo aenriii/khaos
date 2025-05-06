@@ -3,7 +3,9 @@ use diesel::prelude::*;
 
 use super::schema::*;
 
-#[derive(Queryable, Selectable, Insertable, Associations, Identifiable, Debug, Clone)]
+#[derive(
+    Queryable, Selectable, Insertable, Associations, Identifiable, Debug, Clone, AsChangeset,
+)]
 #[diesel(table_name = elections)]
 #[diesel(belongs_to(Server, foreign_key = server_id))]
 #[diesel(primary_key(uuid))]
@@ -33,13 +35,17 @@ pub struct Nominee {
     pub nomination_status: String,
 }
 
-#[derive(Queryable, Selectable, Insertable, Identifiable, Debug, Clone)]
+#[derive(Queryable, Selectable, Insertable, Identifiable, Debug, Clone, AsChangeset)]
 #[diesel(table_name = servers)]
 #[diesel(primary_key(id))]
 pub struct Server {
-    id: String,
-    announcements_channel_id: Option<String>,
-    poll_channel_id: Option<String>,
+    pub id: String,
+    pub announcements_channel_id: Option<String>,
+    pub poll_channel_id: Option<String>,
+    pub election_frequency: i32,
+    pub active: bool,
+    pub winner_temp_role_id: Option<String>,
+    pub winner_perm_role_id: Option<String>,
 }
 
 #[derive(Insertable, Debug, Clone)]
@@ -50,4 +56,18 @@ pub struct NewNominee {
     pub poll_option_text: String,
     pub votes_received: Option<i32>,
     pub nomination_status: String,
+}
+
+impl Server {
+    pub fn default_with_id(server_id: String) -> Self {
+        Server {
+            id: server_id,
+            announcements_channel_id: None,
+            poll_channel_id: None,
+            election_frequency: 336,
+            active: false,
+            winner_temp_role_id: None,
+            winner_perm_role_id: None,
+        }
+    }
 }

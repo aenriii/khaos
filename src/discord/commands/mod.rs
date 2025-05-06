@@ -5,6 +5,7 @@ use crate::di::DI;
 
 mod nominate;
 mod ping;
+mod setup;
 mod test;
 
 pub async fn register_commands(di: DI) {
@@ -26,6 +27,7 @@ pub async fn register_commands(di: DI) {
 
     p.add_command(String::from("ping"), &ping::PingCommand::handle);
     p.add_command(String::from("nominate"), &nominate::NominateCommand::handle);
+    p.add_command(String::from("setup"), &setup::SetupCommand::handle);
 
     log::info!("Registered Commands");
 }
@@ -34,5 +36,6 @@ pub fn slash_commands_list() -> Vec<Command> {
     return vec![
         ping::PingCommand::create_command().into(),
         nominate::NominateCommand::create_command().into(),
+        setup::SetupCommand::create_command().into(),
     ];
 }
